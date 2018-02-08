@@ -25,6 +25,8 @@ repositories {
 dependencies {
 	compile 'org.springframework.cloud:spring-cloud-starter-task:1.2.2.RELEASE'
 	compile('org.springframework.boot:spring-boot-starter-jdbc:1.5.10.RELEASE')
+	compile('org.springframework.boot:spring-boot-starter-web:1.5.10.RELEASE')
+	compile('org.springframework.boot:spring-boot-starter-actuator:1.5.10.RELEASE')
 	compile('mysql:mysql-connector-java:6.0.6')
 	compile('org.flywaydb:flyway-core:5.0.7')
 	testCompile('org.springframework.boot:spring-boot-starter-test')

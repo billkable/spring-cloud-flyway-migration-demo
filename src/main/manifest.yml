@@ -1,0 +1,15 @@
+---
+applications:
+- name: person-migration
+  memory: 768M
+  instances: 1
+  path: ./target/springcloudtasktodaysdate-0.0.1-SNAPSHOT.jar
+
+buildpack: java_buildpack_offline
+
+services:
+- person-db-service
+
+env:
+  MIGRATE_ONLY: false
+  FLYWAY_ENABLED: false
