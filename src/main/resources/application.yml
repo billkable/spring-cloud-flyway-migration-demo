@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: flyway-migration-task
+  datasource:
+    url: jdbc:mysql://localhost:3306/person_dev?user=root&useSSL=false&useTimezone=true&serverTimezone=UTC&useLegacyDatetimeCode=false
+
+flyway:
+  baseline-on-migrate: true
+  enabled: true

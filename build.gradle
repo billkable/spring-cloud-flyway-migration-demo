@@ -1,0 +1,32 @@
+buildscript {
+	ext {
+		springBootVersion = '1.5.10.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+
+group = 'io.pivotal.pal.flyway'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile 'org.springframework.cloud:spring-cloud-starter-task:1.2.2.RELEASE'
+	compile('org.springframework.boot:spring-boot-starter-jdbc:1.5.10.RELEASE')
+	compile('mysql:mysql-connector-java:6.0.6')
+	compile('org.flywaydb:flyway-core:5.0.7')
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+	testCompile('com.h2database:h2')
+}
