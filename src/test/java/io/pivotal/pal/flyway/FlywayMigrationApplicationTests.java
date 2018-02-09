@@ -1,4 +1,4 @@
-package io.pivotal.pal.flyway.flywaymigration;
+package io.pivotal.pal.flyway;
 
 import org.junit.Test;
 //import org.junit.runner.RunWith;
