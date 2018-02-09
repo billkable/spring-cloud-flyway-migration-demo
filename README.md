@@ -72,7 +72,7 @@ In this lab we will choose to implement Spring Cloud Tasks with PCF Scheduled Jo
                   testCompile('org.springframework.boot:spring-boot-starter-test')
             }
 
-#### Implement Staging and Monitoring
+#### Implement Staging and Monitoring as LRP
 By default Flyway migration strategy is eager -- it will run the migration during Springboot datasource
 init by default.
 
@@ -94,6 +94,8 @@ FlywayMigrationStrategy:
                 }
             }
 
+
+#### Implement Migration and Validation as Spring Cloud Task
 But we also want to be able to leverage the same application to execute tasks, in separate process, separate container.
 
 We will use Spring Cloud Tasks to do so with Command Line Runner in Spring Application.  Use a boolean Conditional Property
@@ -119,4 +121,151 @@ called `migrate.task` to enable or disable task mode:
                   }
             }
 
+#### Default Properties
+We need to set up the application property defaults:
 
+            flyway:
+              enabled: true
+              validate-on-migrate: true
+              baseline-on-migrate: true
+
+            migrate:
+              task: false
+              command: stage # stage, migrate options
+
+            endpoints:
+              actuator:
+                enabled: true
+              flyway:
+                enabled: true
+
+            management:
+              security:
+                enabled: false
+
+#### Stage and Monitor
+- Build and Start the FlywayApplication in staging/monitoring mode:
+
+            ./gradlew clean build
+            ./gradlew bootRun
+
+- Post the Actuator flyway endpoint, what do you see?
+
+            https://localhost:8080/flyway
+
+- You should see 3 pending migrations
+
+- Shutdown the FlywayApplication
+
+#### Run a Migration
+
+- Start the FlywayApplication in migrate task mode:
+
+            MIGRATE_TASK=true MIGRATE_COMMAND=migrate ./gradlew bootRun
+
+- What happens?  Once the task is complete, the FlywayApplication terminates.
+
+- Log into database, select from TASKS table.  This is default Spring Cloud Task 
+mechanism for migration job audit trail
+
+- Start the FlywayApplication in staging/monitoring mode:
+
+            ./gradlew bootRun
+
+- Post the Actuator flyway endpoint, what do you see?
+
+            https://localhost:8080/flyway
+
+- You should see 3 successful migrations
+
+- Shutdown the FlywayApplication
+
+#### Setting Up Flyway Staging, Monitoring and Migration to Run on PCF
+
+- Set up the manifest file for the FlywayApplication.  Its default environment
+will launch in staging and monitoring mode.
+
+            ---
+            applications:
+            - name: person-migration
+              memory: 768M
+              instances: 1
+              path: ./build/libs/bootified-flyway-migration-0.0.1-SNAPSHOT.jar
+
+            routes:
+            - route: person-migration-{your initials}.cfapps.io
+
+            buildpack: java_buildpack
+
+            services:
+            - person-db-service
+            - job-scheduler
+
+- Create the database service if not already created.  This will be
+the database that is bound to flyway config deployed in FlywayApplication
+through the Spring Cloud Foundry Connector, no endpoint configuration
+is required:
+
+            cf create-service cleardb spark person-db-service
+
+- Create the job-scheduler service:
+
+            cf create-service scheduler-for-pcf standard job-scheduler
+
+- Download and install the cf job scheduler plugins
+
+#### Deploying Flyway App
+
+- Push the FlywayApplication.  This will stage and set up actuator monitor:
+
+            cf push
+
+- Once push is complete, create job for migration.  You will need to copy the
+run command from output of cf push, and add environment variables to enable
+task mode, and migrate command.  It should look something like this:
+
+            cf create-job person-migration-bkable migrate-person 'MIGRATE_TASK=true MIGRATE_COMMAND=migrate JAVA_OPTS="-agentpath:$PWD/.java-buildpack/open_jdk_jre/bin/jvmkill-1.10.0_RELEASE=printHeapHistogram=1 -Djava.io.tmpdir=$TMPDIR -Djava.ext.dirs=$PWD/.java-buildpack/container_security_provider:$PWD/.java-buildpack/open_jdk_jre/lib/ext -Djava.security.properties=$PWD/.java-buildpack/security_providers/java.security $JAVA_OPTS" && CALCULATED_MEMORY=$($PWD/.java-buildpack/open_jdk_jre/bin/java-buildpack-memory-calculator-3.9.0_RELEASE -totMemory=$MEMORY_LIMIT -stackThreads=300 -loadedClasses=14717 -poolType=metaspace -vmOptions="$JAVA_OPTS") && echo JVM Memory Configuration: $CALCULATED_MEMORY && JAVA_OPTS="$JAVA_OPTS $CALCULATED_MEMORY" && SERVER_PORT=$PORT eval exec $PWD/.java-buildpack/open_jdk_jre/bin/java $JAVA_OPTS -cp $PWD/. org.springframework.boot.loader.JarLauncher'
+
+#### Monitoring PCF Migrations
+- Post actuator endpoint for your FlywayApplication:
+
+            https://person-migration-{your initials}.cfapps.io/flyway
+
+- You should see 3 pending (staged) migrations
+
+#### Executing a Migration
+- Given we are using the PCF Scheduler, we should schedule the job.  For the lab
+we will kick off manually:
+
+            cf run-job migrate-person
+
+- You can view for successful completion through job history:
+
+            cf job-history migrate-person
+
+- Post actuator endpoint for your FlywayApplication:
+
+            https://person-migration-{your initials}.cfapps.io/flyway
+
+- You should see 3 successful migrations
+
+## Wrap Up
+- What happens if a migration fails?
+      - If it fails mid-flight without DDL transactions, may require rollback 
+      of database, or compensating undo.  Flyway Pro provides official Undo
+      support; however, the same may be another versioned migration in the
+      community addition.
+      - If migration fails due to SQL syntax, the migration may be repaired
+      through Flyway API, and the migration re-run.
+- What if we need to clean a non-prod database?
+      - Flyway supports clean option through configuration, or API.  It 
+      must be disabled for production
+- Can we validate migrations, without running it?
+      - Yes, the `validate-on-migrate` option does this, but validate API
+      may be invoked following migration
+
+## Extras
+- Extend the FlywayApplication with the following:
+      - Ability to run a task to repair migration
+      - Ability to run a task to clean the database
+      - Ability to run a task to validate migrations
