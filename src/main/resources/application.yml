@@ -9,8 +9,9 @@ flyway:
   validate-on-migrate: true
   baseline-on-migrate: true
 
-migrate-task: false
-migrate-validate-only: true
+#migrate:
+#  task: false
+#  command: stage # stage, repair, validate, migrate, clean
 
 endpoints:
   actuator:

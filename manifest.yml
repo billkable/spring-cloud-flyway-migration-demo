@@ -1,0 +1,19 @@
+---
+applications:
+- name: person-migration-bkable
+  memory: 768M
+  instances: 1
+  path: ./build/libs/bootified-flyway-migration-0.0.1-SNAPSHOT.jar
+
+routes:
+- route: person-migration-bkable.cfapps.io
+
+buildpack: java_buildpack
+
+services:
+- person-db-service
+- job-scheduler
+
+env:
+  MIGRATE_TASK: false
+  MIGRATE_COMMAND: stage

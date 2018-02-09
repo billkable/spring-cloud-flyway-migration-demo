@@ -6,10 +6,10 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class FlywayMigrationMonitorApplication {
+public class FlywayApplication {
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public static void main(String[] args) {
-        SpringApplication.run(FlywayMigrationMonitorApplication.class, args);
+        SpringApplication.run(FlywayApplication.class, args);
     }
 }

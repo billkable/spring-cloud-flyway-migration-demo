@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @EnableTask
-@ConditionalOnProperty("migrate-task")
+@ConditionalOnProperty("migrate.task")
 public class FlywayMigrationTaskConfig {
 	private Logger logger = LoggerFactory.getLogger(this.getClass());
 

@@ -32,3 +32,9 @@ dependencies {
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 	testCompile('com.h2database:h2')
 }
+
+clean.doLast() {
+    file("./out").deleteDir()
+}
+
+//TODO Build Gradle Tasks to generate PCF mysql and PCF scheduler services
