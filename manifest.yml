@@ -13,7 +13,3 @@ buildpack: java_buildpack
 services:
 - person-db-service
 - job-scheduler
-
-env:
-  MIGRATE_TASK: false
-  MIGRATE_COMMAND: stage
